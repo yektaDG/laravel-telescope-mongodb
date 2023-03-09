@@ -20,7 +20,7 @@ class RequestWatcher extends Watcher
     /**
      * Register the watcher.
      *
-     * @param  \Illuminate\Contracts\Foundation\Application  $app
+     * @param \Illuminate\Contracts\Foundation\Application $app
      * @return void
      */
     public function register($app)
@@ -31,12 +31,12 @@ class RequestWatcher extends Watcher
     /**
      * Record an incoming HTTP request.
      *
-     * @param  \Illuminate\Foundation\Http\Events\RequestHandled  $event
+     * @param \Illuminate\Foundation\Http\Events\RequestHandled $event
      * @return void
      */
     public function recordRequest(RequestHandled $event)
     {
-        if (! Telescope::isRecording() ||
+        if (!Telescope::isRecording() ||
             $this->shouldIgnoreHttpMethod($event) ||
             $this->shouldIgnoreStatusCode($event)) {
             return;
@@ -45,7 +45,7 @@ class RequestWatcher extends Watcher
         $startTime = defined('LARAVEL_START') ? LARAVEL_START : $event->request->server('REQUEST_TIME_FLOAT');
 
         Telescope::recordRequest(IncomingEntry::make([
-            'ip_address' => $event->request->ip(),
+            'ip_address' => htmlspecialchars(strip_tags(@$_SERVER['HTTP_X_REAL_IP'])),
             'uri' => str_replace($event->request->root(), '', $event->request->fullUrl()) ?: '/',
             'method' => $event->request->method(),
             'controller_action' => optional($event->request->route())->getActionName(),
@@ -63,7 +63,7 @@ class RequestWatcher extends Watcher
     /**
      * Determine if the request should be ignored based on its method.
      *
-     * @param  mixed  $event
+     * @param mixed $event
      * @return bool
      */
     protected function shouldIgnoreHttpMethod($event)
@@ -79,7 +79,7 @@ class RequestWatcher extends Watcher
     /**
      * Determine if the request should be ignored based on its status code.
      *
-     * @param  mixed  $event
+     * @param mixed $event
      * @return bool
      */
     protected function shouldIgnoreStatusCode($event)
@@ -93,7 +93,7 @@ class RequestWatcher extends Watcher
     /**
      * Format the given headers.
      *
-     * @param  array  $headers
+     * @param array $headers
      * @return array
      */
     protected function headers($headers)
@@ -110,7 +110,7 @@ class RequestWatcher extends Watcher
     /**
      * Format the given payload.
      *
-     * @param  array  $payload
+     * @param array $payload
      * @return array
      */
     protected function payload($payload)
@@ -123,8 +123,8 @@ class RequestWatcher extends Watcher
     /**
      * Hide the given parameters.
      *
-     * @param  array  $data
-     * @param  array  $hidden
+     * @param array $data
+     * @param array $hidden
      * @return mixed
      */
     protected function hideParameters($data, $hidden)
@@ -141,7 +141,7 @@ class RequestWatcher extends Watcher
     /**
      * Extract the session variables from the given request.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param \Illuminate\Http\Request $request
      * @return array
      */
     private function sessionVariables(Request $request)
@@ -152,7 +152,7 @@ class RequestWatcher extends Watcher
     /**
      * Extract the input from the given request.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param \Illuminate\Http\Request $request
      * @return array
      */
     private function input(Request $request)
@@ -162,7 +162,7 @@ class RequestWatcher extends Watcher
         array_walk_recursive($files, function (&$file) {
             $file = [
                 'name' => $file->getClientOriginalName(),
-                'size' => $file->isFile() ? ($file->getSize() / 1000).'KB' : '0',
+                'size' => $file->isFile() ? ($file->getSize() / 1000) . 'KB' : '0',
             ];
         });
 
@@ -172,7 +172,7 @@ class RequestWatcher extends Watcher
     /**
      * Format the given response object.
      *
-     * @param  \Symfony\Component\HttpFoundation\Response  $response
+     * @param \Symfony\Component\HttpFoundation\Response $response
      * @return array|string
      */
     protected function response(Response $response)
@@ -183,8 +183,8 @@ class RequestWatcher extends Watcher
             if (is_array(json_decode($content, true)) &&
                 json_last_error() === JSON_ERROR_NONE) {
                 return $this->contentWithinLimits($content)
-                        ? $this->hideParameters(json_decode($content, true), Telescope::$hiddenResponseParameters)
-                        : 'Purged By Telescope';
+                    ? $this->hideParameters(json_decode($content, true), Telescope::$hiddenResponseParameters)
+                    : 'Purged By Telescope';
             }
 
             if (Str::startsWith(strtolower($response->headers->get('Content-Type') ?? ''), 'text/plain')) {
@@ -193,7 +193,7 @@ class RequestWatcher extends Watcher
         }
 
         if ($response instanceof RedirectResponse) {
-            return 'Redirected to '.$response->getTargetUrl();
+            return 'Redirected to ' . $response->getTargetUrl();
         }
 
         if ($response instanceof IlluminateResponse && $response->getOriginalContent() instanceof View) {
@@ -213,7 +213,7 @@ class RequestWatcher extends Watcher
     /**
      * Determine if the content is within the set limits.
      *
-     * @param  string  $content
+     * @param string $content
      * @return bool
      */
     public function contentWithinLimits($content)
@@ -226,7 +226,7 @@ class RequestWatcher extends Watcher
     /**
      * Extract the data from the given view in array form.
      *
-     * @param  \Illuminate\View\View  $view
+     * @param \Illuminate\View\View $view
      * @return array
      */
     protected function extractDataFromView($view)
