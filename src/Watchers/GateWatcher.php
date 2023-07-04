@@ -17,7 +17,7 @@ class GateWatcher extends Watcher
     /**
      * Register the watcher.
      *
-     * @param  \Illuminate\Contracts\Foundation\Application  $app
+     * @param \Illuminate\Contracts\Foundation\Application $app
      * @return void
      */
     public function register($app)
@@ -28,7 +28,7 @@ class GateWatcher extends Watcher
     /**
      * Handle the GateEvaluated event.
      *
-     * @param  \Illuminate\Auth\Access\Events\GateEvaluated  $event
+     * @param \Illuminate\Auth\Access\Events\GateEvaluated $event
      * @return void
      */
     public function handleGateEvaluated(GateEvaluated $event)
@@ -39,15 +39,15 @@ class GateWatcher extends Watcher
     /**
      * Record a gate check.
      *
-     * @param  \Illuminate\Contracts\Auth\Authenticatable|mixed|null  $user
-     * @param  string  $ability
-     * @param  bool  $result
-     * @param  array  $arguments
+     * @param \Illuminate\Contracts\Auth\Authenticatable|mixed|null $user
+     * @param string $ability
+     * @param bool $result
+     * @param array $arguments
      * @return bool
      */
     public function recordGateCheck($user, $ability, $result, $arguments)
     {
-        if (! Telescope::isRecording() || $this->shouldIgnore($ability)) {
+        if (!Telescope::isRecording() || $this->shouldIgnore($ability, $this->gateResult($result))) {
             return;
         }
 
@@ -67,18 +67,18 @@ class GateWatcher extends Watcher
     /**
      * Determine if the ability should be ignored.
      *
-     * @param  string  $ability
+     * @param string $ability
      * @return bool
      */
-    private function shouldIgnore($ability)
+    private function shouldIgnore($ability, $result)
     {
-        return Str::is($this->options['ignore_abilities'] ?? [], $ability);
+        return Str::is($this->options['ignore_abilities'] ?? [], $ability) || Str::is($this->options['ignore_result'] ?? [], $result);
     }
 
     /**
      * Determine if the gate result is denied or allowed.
      *
-     * @param  bool|\Illuminate\Auth\Access\Response  $result
+     * @param bool|\Illuminate\Auth\Access\Response $result
      * @return string
      */
     private function gateResult($result)
@@ -93,7 +93,7 @@ class GateWatcher extends Watcher
     /**
      * Format the given arguments.
      *
-     * @param  array  $arguments
+     * @param array $arguments
      * @return array
      */
     private function formatArguments($arguments)
