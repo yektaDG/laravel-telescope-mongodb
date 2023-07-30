@@ -189,14 +189,17 @@ class DatabaseEntriesRepository implements Contract, ClearableRepository, Prunab
     protected function storeTags(Collection $results)
     {
         $results->chunk($this->chunkSize)->each(function ($chunked) {
-            $this->table('telescope_entries_tags')->insert($chunked->flatMap(function ($tags, $uuid) {
+            $dataToInsert = $chunked->flatMap(function ($tags, $uuid) {
                 return collect($tags)->map(function ($tag) use ($uuid) {
                     return [
                         'entry_uuid' => $uuid,
                         'tag' => $tag,
                     ];
                 });
-            })->all());
+            })->all();
+
+            if (isset($dataToInsert))
+                $this->table('telescope_entries_tags')->insert($dataToInsert);
         });
     }
 
