@@ -150,7 +150,7 @@ class EntryModel extends Model
     protected function whereBeforeSequence($query, EntryQueryOptions $options)
     {
         $query->when($options->beforeSequence, function ($query, $beforeSequence) {
-            return $query->where('sequence', '<', $beforeSequence);
+            return $query->where('sequence', '<', (int)$beforeSequence);
         });
 
         return $this;
