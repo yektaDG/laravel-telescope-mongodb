@@ -65,6 +65,8 @@ class IncomingEntry
 
     public $should_display_on_index;
 
+    public $sequence;
+
     /**
      * Create a new incoming entry instance.
      *
@@ -307,6 +309,10 @@ class IncomingEntry
         return $this->familyHash;
     }
 
+    public function sequence()
+    {
+        return $this->sequence;
+    }
     /**
      * Get an array representation of the entry for storage.
      *
@@ -320,6 +326,7 @@ class IncomingEntry
             'family_hash' => $this->familyHash,
             'type' => $this->type,
             'content' => $this->content,
+            'sequence' => $this->sequence,
             'should_display_on_index' => $this->should_display_on_index,
             'created_at' => $this->recordedAt->toDateTimeString(),
         ];

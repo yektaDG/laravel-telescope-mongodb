@@ -136,19 +136,50 @@ class DatabaseEntriesRepository implements Contract, ClearableRepository, Prunab
 
         [$exceptions, $entries] = $entries->partition->isException();
 
-        $this->storeExceptions($exceptions);
+        $nextSequence = $this->getLastSequence();
+
+        $this->storeExceptions($exceptions, $nextSequence);
 
         $table = $this->table('telescope_entries');
 
-        $entries->chunk($this->chunkSize)->each(function ($chunked) use ($table) {
-            $table->insert($chunked->map(function ($entry) {
-                $entry->content = json_encode($entry->content, JSON_INVALID_UTF8_SUBSTITUTE);
 
+        $entries->chunk($this->chunkSize)->each(function ($chunked) use ($table, &$nextSequence) {
+            $table->insert($chunked->map(function ($entry) use (&$nextSequence) {
+                $entry->content = json_encode($entry->content, JSON_INVALID_UTF8_SUBSTITUTE);
+                $entry->sequence = ++$nextSequence;
                 return $entry->toArray();
             })->values()->all());
         });
 
+        $this->updateSequence($nextSequence);
+
         $this->storeTags($entries->pluck('tags', 'uuid'));
+    }
+
+
+    protected function getLastSequence(): int
+    {
+        $nextSequence = DB::connection('mongodb')->table('counters')->where('_id', 'telescope_entries')->first();
+
+        if (!isset($nextSequence) || empty($nextSequence)) {
+            DB::connection('mongodb')
+                ->table('counters')->insert([
+                    '_id' => 'telescope_entries',
+                    'sequence' => 0,
+                ]);
+            $nextSequence = 0;
+        } else {
+            $nextSequence = $nextSequence['sequence'];
+        }
+        return $nextSequence;
+    }
+
+    protected function updateSequence($sequence): void
+    {
+        DB::connection('mongodb')
+            ->table('counters')->where('_id', 'telescope_entries')->update([
+                'sequence' => $sequence,
+            ]);
     }
 
     /**
@@ -157,10 +188,10 @@ class DatabaseEntriesRepository implements Contract, ClearableRepository, Prunab
      * @param \Illuminate\Support\Collection|\Laravel\Telescope\IncomingEntry[] $exceptions
      * @return void
      */
-    protected function storeExceptions(Collection $exceptions)
+    protected function storeExceptions(Collection $exceptions, &$nextSequence = 0)
     {
-        $exceptions->chunk($this->chunkSize)->each(function ($chunked) {
-            $this->table('telescope_entries')->insert($chunked->map(function ($exception) {
+        $exceptions->chunk($this->chunkSize)->each(function ($chunked) use (&$nextSequence) {
+            $this->table('telescope_entries')->insert($chunked->map(function ($exception) use (&$nextSequence) {
                 $occurrences = $this->countExceptionOccurences($exception);
 
                 $this->table('telescope_entries')
@@ -173,6 +204,7 @@ class DatabaseEntriesRepository implements Contract, ClearableRepository, Prunab
                     'content' => json_encode(array_merge(
                         $exception->content, ['occurrences' => $occurrences + 1]
                     )),
+                    'sequence' => $nextSequence,
                 ]);
             })->values()->all());
         });
