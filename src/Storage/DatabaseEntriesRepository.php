@@ -198,7 +198,7 @@ class DatabaseEntriesRepository implements Contract, ClearableRepository, Prunab
                 });
             })->all();
 
-            if (isset($dataToInsert))
+            if (isset($dataToInsert) && !empty($dataToInsert))
                 $this->table('telescope_entries_tags')->insert($dataToInsert);
         });
     }
