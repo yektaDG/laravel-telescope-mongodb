@@ -13,34 +13,22 @@ export default {
          * Show the time ago format for the given time.
          */
         timeAgo(time) {
-            moment.updateLocale('en', {
-                relativeTime: {
-                    future: 'in %s',
-                    past: '%s ago',
-                    s: (number) => number + 's ago',
-                    ss: '%ds ago',
-                    m: '1m ago',
-                    mm: '%dm ago',
-                    h: '1h ago',
-                    hh: '%dh ago',
-                    d: '1d ago',
-                    dd: '%dd ago',
-                    M: 'a month ago',
-                    MM: '%d months ago',
-                    y: 'a year ago',
-                    yy: '%d years ago',
-                },
-            });
 
-            let secondsElapsed = moment().diff(time, 'seconds');
-            let dayStart = moment('2018-01-01').startOf('day').seconds(secondsElapsed);
+            const date = new Date(time);
+            const currentDate = new Date();
+            const timeDifference = (currentDate - date) / 1000; // Time difference in seconds
 
-            if (secondsElapsed > 300) {
-                return moment(time).fromNow(true);
-            } else if (secondsElapsed < 60) {
-                return dayStart.format('s') + 's ago';
+            if (timeDifference < 60) {
+                return `${Math.floor(timeDifference)} Sec ago`;
+            } else if (timeDifference < 3600) {
+                const minutes = Math.floor(timeDifference / 60);
+                return `${minutes} Min ago`;
+            } else if (timeDifference < 86400) {
+                const hours = Math.floor(timeDifference / 3600);
+                return `${hours} H ago`;
             } else {
-                return dayStart.format('m:ss') + 'm ago';
+                const days = Math.floor(timeDifference / 86400);
+                return `${days} Day${days !== 1 ? 's' : ''} ago`;
             }
         },
 
