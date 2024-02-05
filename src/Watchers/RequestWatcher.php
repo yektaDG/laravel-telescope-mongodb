@@ -45,7 +45,7 @@ class RequestWatcher extends Watcher
         $startTime = defined('LARAVEL_START') ? LARAVEL_START : $event->request->server('REQUEST_TIME_FLOAT');
 
         Telescope::recordRequest(IncomingEntry::make([
-            'ip_address' => htmlspecialchars(strip_tags(@$_SERVER['HTTP_X_REAL_IP'] ?? '')),
+            'ip_address' => htmlspecialchars(strip_tags(@$_SERVER['HTTP_X_FORWARDED_FOR'] ?? (@$_SERVER['HTTP_X_REAL_IP'] ?? request()->ip()))),
             'uri' => str_replace($event->request->root(), '', $event->request->fullUrl()) ?: '/',
             'method' => $event->request->method(),
             'controller_action' => optional($event->request->route())->getActionName(),
